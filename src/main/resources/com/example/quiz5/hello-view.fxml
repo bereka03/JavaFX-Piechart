@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.quiz5.ProductMarketController">
+
+<HBox spacing="10" padding="10">
+    <Label text="Product Name:" />
+    <TextField fx:id="nameTextField" />
+    <Label text="Quantity:" />
+    <TextField fx:id="quantityTextField" />
+    <Button text="Add Product" onAction="#addProduct" />
+</HBox>
+
+<PieChart fx:id="pieChart" />
+
+</VBox>
