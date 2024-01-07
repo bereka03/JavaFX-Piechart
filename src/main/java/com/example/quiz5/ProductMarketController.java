@@ -1,5 +1,6 @@
 package com.example.quiz5;
 
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -11,6 +12,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.PrimitiveIterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class ProductMarketController {
 
@@ -50,7 +57,7 @@ public class ProductMarketController {
 
     private void addProductToDatabase(String name, int quantity) {
         try (Connection connection = ProductDatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO products (product, quantity) VALUES (?, ?)")) {
+             PreparedStatement statement = connection.prepareStatement("INSERT INTO products (name, quantity) VALUES (?, ?)")) {
 
             statement.setString(1, name);
             statement.setInt(2, quantity);
@@ -64,17 +71,41 @@ public class ProductMarketController {
     private void updatePieChart() {
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 
-        // Fetch data from the database and populate pieChartData
+        // Fetch data from the database and populate pieChartData using Java Stream API
         try (Connection connection = ProductDatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT product, SUM(quantity) AS total FROM products GROUP BY product");
+             PreparedStatement statement = connection.prepareStatement("SELECT name, SUM(quantity) AS total FROM products GROUP BY name");
              ResultSet resultSet = statement.executeQuery()) {
 
-            while (resultSet.next()) {
-                String productName = resultSet.getString("product");
-                int totalQuantity = resultSet.getInt("total");
+            // Use Java Stream API to collect the data and group by product name
+            Map<String, Integer> productQuantities = StreamSupport.stream(
+                            Spliterators.spliteratorUnknownSize((PrimitiveIterator.OfInt) resultSet, Spliterator.ORDERED),
+                            false)
+                    .collect(Collectors.toMap(
+                            result -> {
+                                try {
+                                    return resultSet.getString("name");
+                                } catch (SQLException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            },
+                            result -> {
+                                try {
+                                    return resultSet.getInt("quantity");
+                                } catch (SQLException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            },
+                            Integer::sum
+                    ));
 
-                pieChartData.add(new PieChart.Data(productName, totalQuantity));
-            }
+            // Populate pieChartData with the grouped data
+            productQuantities.forEach((productName, totalQuantity) -> {
+                PieChart.Data data = new PieChart.Data(productName, totalQuantity);
+                pieChartData.add(data);
+
+                // Set the label to include the quantity
+                data.nameProperty().bind(Bindings.concat(productName, " - ", totalQuantity));
+            });
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -83,6 +114,7 @@ public class ProductMarketController {
         // Update the PieChart with the new data
         pieChart.setData(pieChartData);
     }
+
 }
 
 

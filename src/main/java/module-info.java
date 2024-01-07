@@ -1,4 +1,4 @@
-module com.example.quiz5 {
+module com.example.quiz {
     requires javafx.controls;
     requires javafx.fxml;
 

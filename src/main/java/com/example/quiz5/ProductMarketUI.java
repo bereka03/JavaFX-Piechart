@@ -63,11 +63,13 @@ public class ProductMarketUI {
 
         // Fetch data from the products list and populate pieChartData
         for (Product product : products) {
-            pieChartData.add(new PieChart.Data(product.getName(), product.getQuantity()));
+            String label = product.getName() + " - " + product.getQuantity();
+            pieChartData.add(new PieChart.Data(label, product.getQuantity()));
         }
 
         // Update the PieChart with the new data
         pieChart.setData(pieChartData);
     }
+
 
 }
